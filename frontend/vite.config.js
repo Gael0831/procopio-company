@@ -9,10 +9,6 @@ export default defineConfig({
         tailwindcss(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: [
-                'favicon.svg',
-                'icons.svg'
-            ],
             manifest: {
                 name: 'Procopio Company',
                 short_name: 'Procopio',
@@ -27,7 +23,7 @@ export default defineConfig({
                     {
                         src: '/procopio_company/icon-192.png',
                         sizes: '192x192',
-                        type: 'image/png',
+                        type: 'image/png'
                     },
                     {
                         src: '/procopio_company/icon-512.png',
@@ -38,5 +34,9 @@ export default defineConfig({
             }
         })
     ],
-    base: '/procopio_company'
+    base: '/procopio_company/',
+    build: {
+        outDir: 'dist/procopio_company',
+        emptyOutDir: true
+    }
 });
