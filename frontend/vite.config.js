@@ -25,12 +25,12 @@ export default defineConfig({
                 scope: '/procopio_company/',
                 icons: [
                     {
-                        src: '/icon-192.png',
+                        src: '/procopio_company/icon-192.png',
                         sizes: '192x192',
                         type: 'image/png',
                     },
                     {
-                        src: '/icon-512.png',
+                        src: '/procopio_company/icon-512.png',
                         sizes: '512x512',
                         type: 'image/png'
                     }
