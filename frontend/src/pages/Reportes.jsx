@@ -86,9 +86,7 @@ function Reportes() {
 
     const obtenerReporte = async () => {
         const config = configuraciones[tipoReporte];
-
         const respuesta = await API.get(config.endpoint);
-
         setDatos(respuesta.data);
     };
 
@@ -169,10 +167,10 @@ function Reportes() {
     return (
         <MainLayout>
 
-            <div className="flex justify-between items-center mb-10">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-10">
 
                 <div>
-                    <h1 className="text-5xl font-bold text-green-800 dark:text-green-300">
+                    <h1 className="text-4xl md:text-5xl font-bold text-green-800 dark:text-green-300">
                         Reportes 📄
                     </h1>
 
@@ -183,7 +181,7 @@ function Reportes() {
 
             </div>
 
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl mb-10">
+            <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl mb-10">
 
                 <h2 className="text-2xl font-bold mb-6 dark:text-white">
                     Seleccionar reporte
@@ -207,7 +205,7 @@ function Reportes() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
 
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl">
+                <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl">
 
                     <h2 className="text-2xl font-bold mb-6 dark:text-white">
                         Exportar PDF
@@ -226,7 +224,7 @@ function Reportes() {
 
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl">
+                <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl">
 
                     <h2 className="text-2xl font-bold mb-6 dark:text-white">
                         Exportar Excel
@@ -247,13 +245,51 @@ function Reportes() {
 
             </div>
 
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl">
+            <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl overflow-hidden">
 
                 <h2 className="text-2xl font-bold mb-6 dark:text-white">
                     Vista previa: {configActual.titulo}
                 </h2>
 
-                <div className="overflow-x-auto">
+                <div className="grid grid-cols-1 gap-4 lg:hidden">
+                    {
+                        datos.length === 0 ? (
+                            <p className="text-gray-500 dark:text-gray-300">
+                                No hay datos disponibles
+                            </p>
+                        ) : (
+                            datos.map((item, index) => {
+                                const valores = configActual.mapear(item);
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className="border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm"
+                                    >
+                                        {
+                                            configActual.columnas.map((columna, i) => (
+                                                <div
+                                                    key={columna}
+                                                    className="flex justify-between gap-4 border-b border-gray-100 dark:border-gray-700 py-2 last:border-b-0"
+                                                >
+                                                    <span className="font-semibold dark:text-white">
+                                                        {columna}
+                                                    </span>
+
+                                                    <span className="text-right text-gray-600 dark:text-gray-300">
+                                                        {valores[i]}
+                                                    </span>
+                                                </div>
+                                            ))
+                                        }
+                                    </div>
+                                );
+                            })
+                        )
+                    }
+                </div>
+
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full min-w-[700px]">
 
                         <thead>
@@ -310,7 +346,7 @@ function Reportes() {
             </div>
 
         </MainLayout>
-    )
+    );
 }
 
 export default Reportes;

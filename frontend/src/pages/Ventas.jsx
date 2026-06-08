@@ -13,7 +13,7 @@ function Ventas() {
 
     const [idEspecie, setIdEspecie] = useState('');
     const [cantidad, setCantidad] = useState('');
-    const [filtro, setFiltro] = useState('todas');
+    const [filtro, setFiltro] = useState('mes');
 
     const especieSeleccionada = especies.find(
         especie => especie.id_especie === Number(idEspecie)
@@ -39,6 +39,12 @@ function Ventas() {
         };
 
         cargarDatos();
+
+        const intervalo = setInterval(() => {
+            cargarDatos();
+        }, 5000);
+
+        return () => clearInterval(intervalo);
     }, []);
 
     const ventasFiltradas = ventas.filter((venta) => {
@@ -66,8 +72,30 @@ function Ventas() {
             );
         }
 
+        if (filtro === 'seisMeses') {
+            const seisMesesAtras = new Date(hoy);
+            seisMesesAtras.setMonth(hoy.getMonth() - 6);
+            seisMesesAtras.setHours(0, 0, 0, 0);
+
+            return fechaVenta >= seisMesesAtras;
+        }
+
+        if (filtro === 'anio') {
+            return fechaVenta.getFullYear() === hoy.getFullYear();
+        }
+
         return true;
     });
+
+    const totalFiltrado = ventasFiltradas.reduce(
+        (total, venta) => total + Number(venta.total),
+        0
+    );
+
+    const productosVendidos = ventasFiltradas.reduce(
+        (total, venta) => total + Number(venta.cantidad),
+        0
+    );
 
     const registrarVenta = async () => {
 
@@ -133,15 +161,26 @@ function Ventas() {
             obtenerVentas();
 
         } else {
-
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
                 text: respuesta.data.mensaje
             });
-
         }
     };
+
+    const botonFiltro = (valor, texto) => (
+        <button
+            onClick={() => setFiltro(valor)}
+            className={
+                filtro === valor
+                    ? 'bg-green-700 text-white px-4 py-2 rounded-xl font-semibold'
+                    : 'bg-green-100 text-green-700 px-4 py-2 rounded-xl font-semibold'
+            }
+        >
+            {texto}
+        </button>
+    );
 
     return (
         <MainLayout>
@@ -218,7 +257,7 @@ function Ventas() {
                     </div>
                 </div>
 
-                <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl">
+                <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl overflow-hidden">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
                         <h2 className="text-2xl font-bold dark:text-white">
@@ -226,26 +265,93 @@ function Ventas() {
                         </h2>
 
                         <div className="flex flex-wrap gap-2">
-                            <button onClick={() => setFiltro('todas')} className={filtro === 'todas' ? 'bg-green-700 text-white px-4 py-2 rounded-xl' : 'bg-green-100 text-green-700 px-4 py-2 rounded-xl'}>
-                                Todas
-                            </button>
-
-                            <button onClick={() => setFiltro('dia')} className={filtro === 'dia' ? 'bg-green-700 text-white px-4 py-2 rounded-xl' : 'bg-green-100 text-green-700 px-4 py-2 rounded-xl'}>
-                                Hoy
-                            </button>
-
-                            <button onClick={() => setFiltro('semana')} className={filtro === 'semana' ? 'bg-green-700 text-white px-4 py-2 rounded-xl' : 'bg-green-100 text-green-700 px-4 py-2 rounded-xl'}>
-                                Semana
-                            </button>
-
-                            <button onClick={() => setFiltro('mes')} className={filtro === 'mes' ? 'bg-green-700 text-white px-4 py-2 rounded-xl' : 'bg-green-100 text-green-700 px-4 py-2 rounded-xl'}>
-                                Mes
-                            </button>
+                            {botonFiltro('dia', 'Hoy')}
+                            {botonFiltro('semana', 'Semana')}
+                            {botonFiltro('mes', 'Mes')}
+                            {botonFiltro('seisMeses', '6 meses')}
+                            {botonFiltro('anio', 'Año')}
+                            {botonFiltro('todas', 'Todo')}
                         </div>
 
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+                        <div className="bg-green-50 dark:bg-gray-700 p-5 rounded-2xl">
+                            <p className="text-gray-500 dark:text-gray-300">
+                                Ventas encontradas
+                            </p>
+
+                            <p className="text-3xl font-bold text-green-600">
+                                {ventasFiltradas.length}
+                            </p>
+                        </div>
+
+                        <div className="bg-blue-50 dark:bg-gray-700 p-5 rounded-2xl">
+                            <p className="text-gray-500 dark:text-gray-300">
+                                Productos vendidos
+                            </p>
+
+                            <p className="text-3xl font-bold text-blue-600">
+                                {productosVendidos}
+                            </p>
+                        </div>
+
+                        <div className="bg-yellow-50 dark:bg-gray-700 p-5 rounded-2xl">
+                            <p className="text-gray-500 dark:text-gray-300">
+                                Total vendido
+                            </p>
+
+                            <p className="text-3xl font-bold text-yellow-600">
+                                ${totalFiltrado.toFixed(2)}
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 lg:hidden">
+                        {
+                            ventasFiltradas.length === 0 ? (
+                                <p className="text-gray-500 dark:text-gray-300">
+                                    No hay ventas para este periodo
+                                </p>
+                            ) : (
+                                ventasFiltradas.map((venta) => (
+                                    <div
+                                        key={venta.id_venta}
+                                        className="border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm"
+                                    >
+                                        <div className="flex justify-between items-start gap-3">
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-300">
+                                                    Folio #{venta.id_venta}
+                                                </p>
+
+                                                <h3 className="text-xl font-bold dark:text-white">
+                                                    {venta.especie}
+                                                </h3>
+                                            </div>
+
+                                            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold">
+                                                ${venta.total}
+                                            </span>
+                                        </div>
+
+                                        <p className="mt-4 dark:text-gray-200">
+                                            <span className="font-semibold">Cantidad:</span> {venta.cantidad}
+                                        </p>
+
+                                        <p className="dark:text-gray-200">
+                                            <span className="font-semibold">Fecha:</span>{' '}
+                                            {new Date(venta.fecha).toLocaleString()}
+                                        </p>
+                                    </div>
+                                ))
+                            )
+                        }
+                    </div>
+
+                    <div className="hidden lg:block overflow-x-auto">
                         <table className="w-full min-w-[800px]">
 
                             <thead>

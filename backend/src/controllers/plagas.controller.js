@@ -13,6 +13,10 @@ const obtenerPlagas = async (req, res) => {
                 fecha,
                 descripcion
             FROM plagas
+            WHERE fecha::timestamp > (
+                SELECT COALESCE(MAX(fecha_cierre), '1900-01-01')
+                FROM cierres_mensuales
+            )
             ORDER BY fecha DESC
         `;
 

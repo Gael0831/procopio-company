@@ -165,8 +165,13 @@ const obtenerVentas = async (req, res) => {
                 ON v.id_venta = d.id_venta
             INNER JOIN especies e
                 ON d.id_especie = e.id_especie
+            WHERE v.fecha > (
+                SELECT COALESCE(MAX(fecha_cierre), '1900-01-01')
+                FROM cierres_mensuales
+            )    
             ORDER BY v.fecha DESC
         `;
+        
 
         const resultado = await conexion.query(sql);
 

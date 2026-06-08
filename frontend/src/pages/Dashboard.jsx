@@ -2,6 +2,7 @@ import MainLayout from '../layouts/MainLayout';
 import { useEffect, useState } from 'react';
 import API from '../api/axios';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 import {
     FaLeaf,
@@ -36,6 +37,7 @@ function Dashboard() {
         total_ventas: 0,
         total_operaciones: 0
     });
+
     const [ultimasVentas, setUltimasVentas] = useState([]);
     const [especiesCriticas, setEspeciesCriticas] = useState([]);
     const [plagasRecientes, setPlagasRecientes] = useState([]);
@@ -49,9 +51,10 @@ function Dashboard() {
         const respuesta = await API.get('/dashboard/ventas-mes');
         setVentasData(respuesta.data);
     };
+
     const obtenerResumenPeriodo = async () => {
-    const respuesta = await API.get(`/dashboard/resumen-periodo/${periodo}`);
-    setResumenPeriodo(respuesta.data);
+        const respuesta = await API.get(`/dashboard/resumen-periodo/${periodo}`);
+        setResumenPeriodo(respuesta.data);
     };
 
     const obtenerUltimasVentas = async () => {
@@ -79,14 +82,78 @@ function Dashboard() {
         };
 
         cargarDatos();
+
+        const intervalo = setInterval(() => {
+            cargarDatos();
+        }, 5000);
+
+        return () => clearInterval(intervalo);
     }, []);
+
+    useEffect(() => {
+        const cargarPeriodo = async () => {
+            await obtenerResumenPeriodo();
+        };
+
+        cargarPeriodo();
+    }, [periodo]);
+
+    const cerrarMes = async () => {
+
+        const confirmacion = await Swal.fire({
+            icon: 'warning',
+            title: '¿Cerrar mes?',
+            text: 'Se guardará el resumen mensual en el historial. Los datos no se eliminarán.',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cerrar mes',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) {
+            return;
+        }
+
+        try {
+            const respuesta = await API.post('/cierres/cerrar-mes');
+
+            if (respuesta.data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Mes cerrado',
+                    text: respuesta.data.mensaje
+                });
+
+                navigate('/historial');
+            }
+
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'No se pudo cerrar',
+                text: error.response?.data?.mensaje || 'Ocurrió un error'
+            });
+        }
+    };
+
+    const botonPeriodo = (valor, texto) => (
+        <button
+            onClick={() => setPeriodo(valor)}
+            className={
+                periodo === valor
+                    ? 'bg-green-700 text-white px-5 py-2 rounded-xl font-semibold'
+                    : 'bg-green-100 text-green-700 hover:bg-green-200 px-5 py-2 rounded-xl font-semibold'
+            }
+        >
+            {texto}
+        </button>
+    );
 
     return (
         <MainLayout>
 
-            <div className="flex justify-between items-center mb-10">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-10">
                 <div>
-                    <h1 className="text-5xl font-bold text-green-800 dark:text-white">
+                    <h1 className="text-4xl md:text-5xl font-bold text-green-800 dark:text-white">
                         Dashboard 🌱
                     </h1>
 
@@ -104,6 +171,99 @@ function Dashboard() {
                         admin@procopio.com
                     </p>
                 </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-xl mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+                <div>
+                    <h2 className="text-2xl font-bold text-green-800 dark:text-white">
+                        Cierre mensual
+                    </h2>
+
+                    <p className="text-gray-500 dark:text-gray-300 mt-1">
+                        Guarda el resumen del mes actual en el historial administrativo.
+                    </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                        onClick={() => navigate('/historial')}
+                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-semibold"
+                    >
+                        📚 Ver historial
+                    </button>
+
+                    <button
+                        onClick={cerrarMes}
+                        className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-2xl font-semibold"
+                    >
+                        🔒 Cerrar mes
+                    </button>
+                </div>
+
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-xl mb-10">
+
+                <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+
+                    <div>
+                        <h2 className="text-2xl font-bold text-green-800 dark:text-white">
+                            Resumen por periodo
+                        </h2>
+
+                        <p className="text-gray-500 dark:text-gray-300 mt-1">
+                            Consulta ventas y operaciones por día, semana, mes o año.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                        {botonPeriodo('hoy', 'Hoy')}
+                        {botonPeriodo('semana', 'Semana')}
+                        {botonPeriodo('mes', 'Mes')}
+                        {botonPeriodo('anio', 'Año')}
+                    </div>
+
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+
+                    <div
+                        onClick={() => navigate('/ventas')}
+                        className="bg-green-50 dark:bg-gray-700 p-6 rounded-2xl cursor-pointer hover:scale-[1.02] transition-all"
+                    >
+                        <p className="text-gray-500 dark:text-gray-300">
+                            Ventas del periodo
+                        </p>
+
+                        <p className="text-4xl font-bold text-green-600 mt-2">
+                            ${Number(resumenPeriodo.total_ventas).toFixed(2)}
+                        </p>
+
+                        <p className="text-sm text-gray-500 dark:text-gray-300 mt-2">
+                            Clic para ver ventas
+                        </p>
+                    </div>
+
+                    <div
+                        onClick={() => navigate('/ventas')}
+                        className="bg-blue-50 dark:bg-gray-700 p-6 rounded-2xl cursor-pointer hover:scale-[1.02] transition-all"
+                    >
+                        <p className="text-gray-500 dark:text-gray-300">
+                            Operaciones realizadas
+                        </p>
+
+                        <p className="text-4xl font-bold text-blue-600 mt-2">
+                            {resumenPeriodo.total_operaciones}
+                        </p>
+
+                        <p className="text-sm text-gray-500 dark:text-gray-300 mt-2">
+                            Clic para ver historial
+                        </p>
+                    </div>
+
+                </div>
+
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-10">
@@ -319,13 +479,22 @@ function Dashboard() {
 
             </div>
 
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl">
-                <h2 className="text-2xl font-bold mb-6 text-green-800 dark:text-white">
-                    Ventas por mes
-                </h2>
+            <div
+                onClick={() => navigate('/reportes')}
+                className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl cursor-pointer hover:scale-[1.01] transition-all"
+            >
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                    <h2 className="text-2xl font-bold text-green-800 dark:text-white">
+                        Ventas por mes
+                    </h2>
 
-                <div className="w-full h-[350px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <p className="text-green-600 font-semibold">
+                        Clic para generar reportes
+                    </p>
+                </div>
+
+                <div className="w-full min-w-0 h-[350px] min-h-[350px]">
+                    <ResponsiveContainer width="100%" height={350}>
                         <BarChart data={ventasData}>
                             <XAxis dataKey="mes" />
                             <YAxis />

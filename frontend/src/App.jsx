@@ -10,6 +10,7 @@ import Ventas from './pages/Ventas';
 import Plagas from './pages/Plagas';
 import Reportes from './pages/Reportes';
 import ProtectedRoute from './routes/ProtectedRoute';
+import Historial from './pages/Historial';
 
 function App() {
 
@@ -62,6 +63,15 @@ function App() {
               element={
                   <ProtectedRoute>
                       <Reportes />
+                  </ProtectedRoute>
+              }
+          />
+
+          <Route
+              path="/historial"
+              element={
+                  <ProtectedRoute>
+                      <Historial />
                   </ProtectedRoute>
               }
           />

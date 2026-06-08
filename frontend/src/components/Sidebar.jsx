@@ -10,6 +10,7 @@ import {
 
 import { MdDashboard } from 'react-icons/md';
 import { Link, useNavigate } from 'react-router-dom';
+import { FaHistory } from 'react-icons/fa';
 
 function Sidebar() {
 
@@ -81,6 +82,11 @@ function Sidebar() {
                 <Link to="/reportes" className="flex items-center gap-3 p-4 rounded-2xl hover:bg-green-600 transition-all duration-300">
                     <FaChartBar size={20} />
                     Reportes
+                </Link>
+                
+                <Link to="/historial" className="flex items-center gap-3 p-4 rounded-2xl hover:bg-green-600 transition-all duration-300">
+                    <FaHistory size={20} />
+                    Historial
                 </Link>
 
             </nav>

@@ -32,10 +32,13 @@ app.use('/api/dashboard', dashboardRoutes);
 const reportesRoutes = require('./routes/reportes.routes');
 app.use('/api/reportes', reportesRoutes);
 
+const cierresRoutes = require('./routes/cierres.routes');
+app.use('/api/cierres', cierresRoutes);
+
 app.get('/', (req, res) => {
     res.send('Servidor funcionando');
 });
 
-app.listen(3000, () => {
+app.listen(3000, '0.0.0.0', () => {
     console.log('Servidor en puerto 3000');
 });
