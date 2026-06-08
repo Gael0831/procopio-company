@@ -162,6 +162,52 @@ function Especies() {
     };
     const actualizarEspecie = async () => {
 
+        if (
+            !nombre.trim() ||
+            !nombreCientifico.trim() ||
+            !precio ||
+            !stock ||
+            !stockMinimo
+        ) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campos incompletos',
+                text: 'Todos los campos son obligatorios'
+            });
+
+            return;
+        }
+
+        if (Number(precio) <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Precio inválido',
+                text: 'El precio debe ser mayor a cero'
+            });
+
+            return;
+        }
+
+        if (Number(stock) < 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Stock inválido',
+                text: 'El stock no puede ser negativo'
+            });
+
+            return;
+        }
+
+        if (Number(stockMinimo) < 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Stock mínimo inválido',
+                text: 'El stock mínimo no puede ser negativo'
+            });
+
+            return;
+        }
+
         await API.put(
             `/especies/${idEditar}`,
             {

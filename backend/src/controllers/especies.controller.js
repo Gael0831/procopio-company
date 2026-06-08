@@ -144,6 +144,30 @@ const actualizarEspecie = async (req, res) => {
             stock_minimo
         } = req.body;
 
+        if (
+            !nombre ||
+            !nombre_cientifico ||
+            precio === undefined ||
+            stock === undefined ||
+            stock_minimo === undefined
+        ) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'Todos los campos son obligatorios'
+            });
+        }
+
+        if (
+            Number(precio) <= 0 ||
+            Number(stock) < 0 ||
+            Number(stock_minimo) < 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'No se permiten valores negativos o inválidos'
+            });
+        }
+  
         const sql = `
             UPDATE especies
             SET

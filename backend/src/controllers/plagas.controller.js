@@ -41,6 +41,42 @@ const agregarPlaga = async (req, res) => {
             descripcion
         } = req.body;
 
+        if (
+            !seccion ||
+            !tipo_plaga ||
+            !severidad ||
+            !fecha
+        ) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'Todos los campos principales son obligatorios'
+            });
+        }
+
+        if (!['Baja', 'Media', 'Alta'].includes(severidad)) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'La severidad no es válida'
+            });
+        }
+
+        const fechaActual = new Date();
+        const fechaRegistro = new Date(fecha);
+
+        if (fechaRegistro > fechaActual) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'La fecha no puede ser futura'
+            });
+        }
+
+        if (descripcion && descripcion.length > 500) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'La descripción no puede superar los 500 caracteres'
+            });
+        }
+
         const sql = `
             INSERT INTO plagas(
                 seccion,

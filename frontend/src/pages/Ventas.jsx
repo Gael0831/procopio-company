@@ -13,6 +13,7 @@ function Ventas() {
 
     const [idEspecie, setIdEspecie] = useState('');
     const [cantidad, setCantidad] = useState('');
+    const [filtro, setFiltro] = useState('todas');
 
     const especieSeleccionada = especies.find(
         especie => especie.id_especie === Number(idEspecie)
@@ -39,48 +40,65 @@ function Ventas() {
 
         cargarDatos();
     }, []);
-    const registrarVenta = async () => {
-        if (!idEspecie || !cantidad) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Campos incompletos',
-                text: 'Selecciona una especie y escribe la cantidad'
-            });
-            return;
+
+    const ventasFiltradas = ventas.filter((venta) => {
+        if (filtro === 'todas') return true;
+
+        const fechaVenta = new Date(venta.fecha);
+        const hoy = new Date();
+
+        if (filtro === 'dia') {
+            return fechaVenta.toDateString() === hoy.toDateString();
         }
 
-        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        if (filtro === 'semana') {
+            const inicioSemana = new Date(hoy);
+            inicioSemana.setDate(hoy.getDate() - hoy.getDay());
+            inicioSemana.setHours(0, 0, 0, 0);
+
+            return fechaVenta >= inicioSemana;
+        }
+
+        if (filtro === 'mes') {
+            return (
+                fechaVenta.getMonth() === hoy.getMonth() &&
+                fechaVenta.getFullYear() === hoy.getFullYear()
+            );
+        }
+
+        return true;
+    });
+
+    const registrarVenta = async () => {
 
         if (!idEspecie) {
-
             Swal.fire({
                 icon: 'warning',
                 title: 'Especie requerida',
                 text: 'Selecciona una especie'
             });
-
             return;
         }
-        if (!cantidad) {
 
-            Swal.fire({
-                icon: 'warning',
-                title: 'Cantidad requerida',
-                text: 'Ingresa una cantidad'
-            });
-
-            return;
-        }
-        if (Number(cantidad) <= 0) {
-
+        if (!cantidad || Number(cantidad) <= 0 || !Number.isInteger(Number(cantidad))) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Cantidad inválida',
-                text: 'Debe ser mayor a cero'
+                text: 'La cantidad debe ser un número entero mayor a cero'
             });
-
             return;
         }
+
+        if (Number(cantidad) > Number(especieSeleccionada.stock)) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Stock insuficiente',
+                text: 'No puedes vender más productos de los disponibles'
+            });
+            return;
+        }
+
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
 
         const respuesta = await API.post('/ventas', {
             id_especie: idEspecie,
@@ -90,11 +108,13 @@ function Ventas() {
         });
 
         if (respuesta.data.success) {
+
             Swal.fire({
                 icon: 'success',
                 title: 'Venta registrada',
                 text: `Total: $${respuesta.data.total}`
             });
+
             setTicketData({
                 folio: respuesta.data.id_venta,
                 especie: especieSeleccionada.nombre,
@@ -111,12 +131,15 @@ function Ventas() {
 
             obtenerEspecies();
             obtenerVentas();
+
         } else {
+
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
                 text: respuesta.data.mensaje
             });
+
         }
     };
 
@@ -124,19 +147,19 @@ function Ventas() {
         <MainLayout>
 
             <div className="mb-8">
-                <h1 className="text-5xl font-bold text-green-800">
+                <h1 className="text-4xl md:text-5xl font-bold text-green-800 dark:text-white">
                     Ventas 🛒
                 </h1>
 
-                <p className="text-gray-500 mt-2">
+                <p className="text-gray-500 dark:text-gray-300 mt-2">
                     Registro de ventas y control automático de inventario
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
 
-                <div className="col-span-1 bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl">
-                    <h2 className="text-2xl font-bold mb-6">
+                <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl">
+                    <h2 className="text-2xl font-bold mb-6 dark:text-white">
                         Nueva venta
                     </h2>
 
@@ -169,15 +192,15 @@ function Ventas() {
                             className="w-full border p-3 rounded-xl"
                         />
 
-                        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl">
-                            <p>
+                        <div className="bg-green-50 dark:bg-gray-700 p-5 rounded-2xl">
+                            <p className="dark:text-gray-200">
                                 Precio unitario:
                                 <span className="font-bold text-green-700">
                                     {' '}${precio}
                                 </span>
                             </p>
 
-                            <p className="mt-2">
+                            <p className="mt-2 dark:text-gray-200">
                                 Subtotal:
                                 <span className="font-bold text-green-700">
                                     {' '}${subtotal}
@@ -195,59 +218,93 @@ function Ventas() {
                     </div>
                 </div>
 
-                <div className="col-span-2 bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl">
-                    <h2 className="text-2xl font-bold mb-6">
-                        Historial de ventas
-                    </h2>
+                <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
-                    <table className="w-full min-w-[800px]">
-                        <thead>
-                            <tr className="border-b">
-                                <th className="p-3 text-left">Folio</th>
-                                <th className="p-3 text-left">Especie</th>
-                                <th className="p-3 text-left">Cantidad</th>
-                                <th className="p-3 text-left">Total</th>
-                                <th className="p-3 text-left">Fecha</th>
-                            </tr>
-                        </thead>
+                        <h2 className="text-2xl font-bold dark:text-white">
+                            Historial de ventas
+                        </h2>
 
-                        <tbody>
-                            {
-                                ventas.map((venta) => (
-                                    <tr
-                                        key={venta.id_venta}
-                                        className="border-b hover:bg-gray-50"
-                                    >
-                                        <td className="p-3">
-                                            #{venta.id_venta}
-                                        </td>
+                        <div className="flex flex-wrap gap-2">
+                            <button onClick={() => setFiltro('todas')} className={filtro === 'todas' ? 'bg-green-700 text-white px-4 py-2 rounded-xl' : 'bg-green-100 text-green-700 px-4 py-2 rounded-xl'}>
+                                Todas
+                            </button>
 
-                                        <td className="p-3">
-                                            {venta.especie}
-                                        </td>
+                            <button onClick={() => setFiltro('dia')} className={filtro === 'dia' ? 'bg-green-700 text-white px-4 py-2 rounded-xl' : 'bg-green-100 text-green-700 px-4 py-2 rounded-xl'}>
+                                Hoy
+                            </button>
 
-                                        <td className="p-3">
-                                            {venta.cantidad}
-                                        </td>
+                            <button onClick={() => setFiltro('semana')} className={filtro === 'semana' ? 'bg-green-700 text-white px-4 py-2 rounded-xl' : 'bg-green-100 text-green-700 px-4 py-2 rounded-xl'}>
+                                Semana
+                            </button>
 
-                                        <td className="p-3 font-bold text-green-700">
-                                            ${venta.total}
-                                        </td>
+                            <button onClick={() => setFiltro('mes')} className={filtro === 'mes' ? 'bg-green-700 text-white px-4 py-2 rounded-xl' : 'bg-green-100 text-green-700 px-4 py-2 rounded-xl'}>
+                                Mes
+                            </button>
+                        </div>
 
-                                        <td className="p-3">
-                                            {new Date(venta.fecha).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                ))
-                            }
-                        </tbody>
-                    </table>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[800px]">
+
+                            <thead>
+                                <tr className="border-b border-gray-200 dark:border-gray-700">
+                                    <th className="p-3 text-left dark:text-white">Folio</th>
+                                    <th className="p-3 text-left dark:text-white">Especie</th>
+                                    <th className="p-3 text-left dark:text-white">Cantidad</th>
+                                    <th className="p-3 text-left dark:text-white">Total</th>
+                                    <th className="p-3 text-left dark:text-white">Fecha</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {
+                                    ventasFiltradas.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="5" className="p-6 text-center text-gray-500 dark:text-gray-300">
+                                                No hay ventas para este periodo
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        ventasFiltradas.map((venta) => (
+                                            <tr
+                                                key={venta.id_venta}
+                                                className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                            >
+                                                <td className="p-3 dark:text-gray-200">
+                                                    #{venta.id_venta}
+                                                </td>
+
+                                                <td className="p-3 dark:text-gray-200">
+                                                    {venta.especie}
+                                                </td>
+
+                                                <td className="p-3 dark:text-gray-200">
+                                                    {venta.cantidad}
+                                                </td>
+
+                                                <td className="p-3 font-bold text-green-700">
+                                                    ${venta.total}
+                                                </td>
+
+                                                <td className="p-3 dark:text-gray-200">
+                                                    {new Date(venta.fecha).toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )
+                                }
+                            </tbody>
+
+                        </table>
+                    </div>
                 </div>
 
             </div>
+
             {
                 mostrarTicket && ticketData && (
-
                     <div className="
                         fixed
                         inset-0
@@ -256,142 +313,78 @@ function Ventas() {
                         items-center
                         justify-center
                         z-50
+                        p-4
                     ">
 
                         <div className="
                             bg-white
                             dark:bg-gray-800
-                            p-10
+                            p-6
+                            md:p-10
                             rounded-3xl
                             shadow-2xl
-                            w-[450px]
+                            w-full
+                            max-w-[450px]
                         ">
 
                             <div className="text-center mb-8">
-
-                                <h2 className="
-                                    text-4xl
-                                    font-bold
-                                    text-green-700
-                                ">
+                                <h2 className="text-3xl md:text-4xl font-bold text-green-700">
                                     🌱 Procopio Company
                                 </h2>
 
-                                <p className="
-                                    text-gray-500
-                                    dark:text-gray-300
-                                    mt-2
-                                ">
+                                <p className="text-gray-500 dark:text-gray-300 mt-2">
                                     Ticket de venta
                                 </p>
-
                             </div>
 
-                            <div className="
-                                space-y-4
-                                text-lg
-                            ">
+                            <div className="space-y-4 text-base md:text-lg dark:text-gray-200">
 
                                 <div className="flex justify-between">
-                                    <span className="font-semibold">
-                                        Folio:
-                                    </span>
-
-                                    <span>
-                                        #{ticketData.folio}
-                                    </span>
+                                    <span className="font-semibold">Folio:</span>
+                                    <span>#{ticketData.folio}</span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="font-semibold">
-                                        Especie:
-                                    </span>
-
-                                    <span>
-                                        {ticketData.especie}
-                                    </span>
+                                    <span className="font-semibold">Especie:</span>
+                                    <span>{ticketData.especie}</span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="font-semibold">
-                                        Cantidad:
-                                    </span>
-
-                                    <span>
-                                        {ticketData.cantidad}
-                                    </span>
+                                    <span className="font-semibold">Cantidad:</span>
+                                    <span>{ticketData.cantidad}</span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="font-semibold">
-                                        Precio:
-                                    </span>
-
-                                    <span>
-                                        ${ticketData.precio}
-                                    </span>
+                                    <span className="font-semibold">Precio:</span>
+                                    <span>${ticketData.precio}</span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="font-semibold">
-                                        Total:
-                                    </span>
-
-                                    <span className="
-                                        text-green-600
-                                        font-bold
-                                        text-2xl
-                                    ">
+                                    <span className="font-semibold">Total:</span>
+                                    <span className="text-green-600 font-bold text-2xl">
                                         ${ticketData.subtotal}
                                     </span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="font-semibold">
-                                        Fecha:
-                                    </span>
-
-                                    <span>
-                                        {ticketData.fecha}
-                                    </span>
+                                    <span className="font-semibold">Fecha:</span>
+                                    <span>{ticketData.fecha}</span>
                                 </div>
 
                             </div>
 
-                            <div className="
-                                flex
-                                gap-4
-                                mt-10
-                            ">
+                            <div className="flex gap-4 mt-10">
 
                                 <button
                                     onClick={() => window.print()}
-                                    className="
-                                        flex-1
-                                        bg-green-600
-                                        hover:bg-green-700
-                                        text-white
-                                        py-3
-                                        rounded-2xl
-                                        font-semibold
-                                    "
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-2xl font-semibold"
                                 >
                                     Imprimir
                                 </button>
 
                                 <button
-                                    onClick={() =>
-                                        setMostrarTicket(false)
-                                    }
-                                    className="
-                                        flex-1
-                                        bg-gray-500
-                                        hover:bg-gray-600
-                                        text-white
-                                        py-3
-                                        rounded-2xl
-                                        font-semibold
-                                    "
+                                    onClick={() => setMostrarTicket(false)}
+                                    className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-2xl font-semibold"
                                 >
                                     Cerrar
                                 </button>
@@ -401,7 +394,6 @@ function Ventas() {
                         </div>
 
                     </div>
-
                 )
             }
 

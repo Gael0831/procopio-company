@@ -11,6 +11,35 @@ const registrarVenta = async (req, res) => {
             id_usuario
         } = req.body;
 
+        if (
+            !id_especie ||
+            !cantidad ||
+            !precio ||
+            !id_usuario
+        ) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'Todos los campos son obligatorios'
+            });
+        }
+
+        if (
+            Number(cantidad) <= 0 ||
+            !Number.isInteger(Number(cantidad))
+        ) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'La cantidad debe ser un número entero mayor a cero'
+            });
+        }
+
+        if (Number(precio) <= 0) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'El precio no es válido'
+            });
+        }
+
         const subtotal = cantidad * precio;
 
         const verificarStock = `

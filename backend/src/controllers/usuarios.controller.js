@@ -7,6 +7,22 @@ const login = async (req, res) => {
 
         const { correo, password } = req.body;
 
+        if (!correo || !password) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'Correo y contraseña son obligatorios'
+            });
+        }
+
+        const correoRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!correoRegex.test(correo)) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'El formato del correo no es válido'
+            });
+        }
+
         const sql = `
             SELECT * FROM usuarios
             WHERE correo = $1 AND password = $2

@@ -29,6 +29,9 @@ app.use('/api/plagas', plagasRoutes);
 const dashboardRoutes = require('./routes/dashboard.routes');
 app.use('/api/dashboard', dashboardRoutes);
 
+const reportesRoutes = require('./routes/reportes.routes');
+app.use('/api/reportes', reportesRoutes);
+
 app.get('/', (req, res) => {
     res.send('Servidor funcionando');
 });
