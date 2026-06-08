@@ -76,6 +76,57 @@ const login = async (req, res) => {
 
 };
 
+const restablecerPassword = async (req, res) => {
+    try {
+        const { correo, nuevaPassword } = req.body;
+
+        if (!correo || !nuevaPassword) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'Correo y nueva contraseña son obligatorios'
+            });
+        }
+
+        if (nuevaPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                mensaje: 'La contraseña debe tener al menos 6 caracteres'
+            });
+        }
+
+        const existe = await conexion.query(
+            'SELECT * FROM usuarios WHERE correo = $1',
+            [correo]
+        );
+
+        if (existe.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                mensaje: 'No existe un usuario con ese correo'
+            });
+        }
+
+        await conexion.query(
+            'UPDATE usuarios SET password = $1 WHERE correo = $2',
+            [nuevaPassword, correo]
+        );
+
+        res.json({
+            success: true,
+            mensaje: 'Contraseña actualizada correctamente'
+        });
+
+    } catch (error) {
+        console.log(error);
+
+        res.status(500).json({
+            success: false,
+            mensaje: 'Error al restablecer contraseña'
+        });
+    }
+};
+
 module.exports = {
-    login
+    login,
+    restablecerPassword
 };
