@@ -3,6 +3,13 @@ import API from '../api/axios';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 
+import {
+    FaEnvelope,
+    FaLock,
+    FaLeaf,
+    FaSignInAlt
+} from 'react-icons/fa';
+
 function Login() {
 
     const navigate = useNavigate();
@@ -72,6 +79,7 @@ function Login() {
             confirmButtonText: 'Actualizar contraseña',
             showCancelButton: true,
             cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#15803d',
             preConfirm: () => {
                 const correoReset = document.getElementById('correoReset').value;
                 const passwordReset = document.getElementById('passwordReset').value;
@@ -123,49 +131,240 @@ function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
+        <div className="
+            min-h-screen
+            flex
+            items-center
+            justify-center
+            p-4
+            bg-gradient-to-br
+            from-green-950
+            via-slate-950
+            to-black
+        ">
 
-            <div className="bg-white dark:bg-gray-800 p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-[400px]">
+            <div className="
+                w-full
+                max-w-[980px]
+                min-h-[560px]
+                grid
+                grid-cols-1
+                lg:grid-cols-2
+                rounded-[2rem]
+                overflow-hidden
+                bg-white
+                dark:bg-slate-950
+                shadow-[0_35px_120px_rgba(0,0,0,0.55)]
+                border
+                border-white/10
+            ">
 
-                <h1 className="text-4xl font-bold text-center text-green-700">
-                    Procopio Company
-                </h1>
+                <div className="
+                    relative
+                    hidden
+                    lg:flex
+                    flex-col
+                    justify-between
+                    p-12
+                    bg-[linear-gradient(rgba(6,78,59,.88),rgba(20,83,45,.92)),url('/procopio-bg.png')]
+                    bg-cover
+                    bg-center
+                    text-white
+                ">
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(6,78,59,.70),rgba(20,83,45,.82)),url('/procopio-bg.png')]" />
 
-                <p className="text-center text-gray-500 dark:text-gray-300 mt-2">
-                    Sistema Integral de Gestión Agrícola
-                </p>
+                    <div className="relative z-10">
+                        <div className="
+                            inline-flex
+                            items-center
+                            gap-3
+                            bg-white/15
+                            border
+                            border-white/20
+                            px-4
+                            py-2
+                            rounded-full
+                            text-sm
+                            font-bold
+                            mb-8
+                        ">
+                            Procopio Company
+                        </div>
 
-                <div className="mt-8 space-y-4">
+                        <h1 className="text-5xl font-black leading-tight">
+                            Centro de <br />
+                            Control <br />
+                            Agrícola
+                        </h1>
 
-                    <input
-                        type="email"
-                        placeholder="Correo"
-                        value={correo}
-                        onChange={(e) => setCorreo(e.target.value)}
-                        className="w-full border p-3 rounded-xl"
-                    />
+                        <p className="text-green-50/90 mt-6 text-lg leading-relaxed max-w-md">
+                            Plataforma administrativa para el control de inventario,
+                            ventas, reportes y seguimiento del invernadero.
+                        </p>
 
-                    <input
-                        type="password"
-                        placeholder="Contraseña"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full border p-3 rounded-xl"
-                    />
+                        <div className="mt-10 h-1 w-28 bg-white/70 rounded-full" />
+                    </div>
+                </div>
 
-                    <button
-                        onClick={iniciarSesion}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-semibold"
-                    >
-                        Iniciar sesión
-                    </button>
+                <div className="
+                    p-6
+                    sm:p-8
+                    lg:p-14
+                    flex
+                    flex-col
+                    justify-center
+                ">
 
-                    <button
-                        onClick={recuperarPassword}
-                        className="w-full text-green-700 hover:underline font-semibold"
-                    >
-                        ¿Olvidaste tu contraseña?
-                    </button>
+                    <div className="mb-8 text-center lg:text-left">
+                        <div className="
+                            mx-auto
+                            lg:mx-0
+                            mb-5
+                            w-14
+                            h-14
+                            sm:w-16
+                            sm:h-16
+                            rounded-2xl
+                            bg-green-100
+                            text-green-700
+                            flex
+                            items-center
+                            justify-center
+                            text-3xl
+                            shadow-lg
+                        ">
+                            🌱
+                        </div>
+
+                        <span className="
+                            inline-flex
+                            bg-green-100
+                            text-green-700
+                            px-4
+                            py-2
+                            rounded-full
+                            text-sm
+                            font-black
+                            mb-4
+                        ">
+                            Acceso administrativo
+                        </span>
+
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-green-900 dark:text-white">
+                            Bienvenido
+                        </h2>
+
+                        <p className="text-gray-500 dark:text-gray-300 mt-3">
+                            Ingresa tus credenciales para continuar.
+                        </p>
+                    </div>
+
+                    <div className="space-y-5">
+
+                        <div className="relative">
+                            <FaEnvelope className="absolute left-5 top-1/2 -translate-y-1/2 text-green-700" />
+
+                            <input
+                                type="email"
+                                placeholder="Correo electrónico"
+                                value={correo}
+                                onChange={(e) => setCorreo(e.target.value)}
+                                className="
+                                    w-full
+                                    bg-gray-50
+                                    dark:bg-slate-900
+                                    border
+                                    border-gray-200
+                                    dark:border-slate-700
+                                    pl-14
+                                    pr-5
+                                    py-4
+                                    rounded-2xl
+                                    outline-none
+                                    focus:ring-4
+                                    focus:ring-green-500/20
+                                    focus:border-green-500
+                                    transition-all
+                                    dark:text-white
+                                "
+                            />
+                        </div>
+
+                        <div className="relative">
+                            <FaLock className="absolute left-5 top-1/2 -translate-y-1/2 text-green-700" />
+
+                            <input
+                                type="password"
+                                placeholder="Contraseña"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="
+                                    w-full
+                                    bg-gray-50
+                                    dark:bg-slate-900
+                                    border
+                                    border-gray-200
+                                    dark:border-slate-700
+                                    pl-14
+                                    pr-5
+                                    py-4
+                                    rounded-2xl
+                                    outline-none
+                                    focus:ring-4
+                                    focus:ring-green-500/20
+                                    focus:border-green-500
+                                    transition-all
+                                    dark:text-white
+                                "
+                            />
+                        </div>
+
+                        <button
+                            onClick={iniciarSesion}
+                            className="
+                                w-full
+                                bg-gradient-to-r
+                                from-green-700
+                                to-emerald-500
+                                hover:from-green-800
+                                hover:to-emerald-600
+                                text-white
+                                p-4
+                                rounded-2xl
+                                font-black
+                                shadow-xl
+                                shadow-green-700/25
+                                transition-all
+                                hover:-translate-y-1
+                                flex
+                                items-center
+                                justify-center
+                                gap-3
+                            "
+                        >
+                            <FaSignInAlt />
+                            Acceder al sistema
+                        </button>
+
+                        <button
+                            onClick={recuperarPassword}
+                            className="
+                                w-full
+                                text-green-700
+                                dark:text-green-300
+                                hover:underline
+                                font-bold
+                                pt-2
+                            "
+                        >
+                            ¿Olvidaste tu contraseña?
+                        </button>
+
+                    </div>
+
+                    <p className="text-center text-xs text-gray-400 mt-10">
+                        Procopio Company · Panel administrativo
+                    </p>
 
                 </div>
 

@@ -146,30 +146,35 @@ const resumenPorPeriodo = async (req, res) => {
     try {
         const { periodo } = req.params;
 
+        const hoyMexico = `(NOW() AT TIME ZONE 'America/Mexico_City')`;
+
         let condicionFecha = `${fechaVenta} > ${fechaUltimoCierre}`;
 
         if (periodo === 'hoy') {
-            condicionFecha += ` AND DATE(${fechaVenta}) = CURRENT_DATE`;
+            condicionFecha += ` AND DATE(${fechaVenta}) = DATE(${hoyMexico})`;
         }
 
         if (periodo === 'semana') {
-            condicionFecha += ` AND ${fechaVenta} >= DATE_TRUNC('week', CURRENT_DATE)`;
+            condicionFecha += ` AND ${fechaVenta} >= DATE_TRUNC('week', ${hoyMexico})`;
         }
 
         if (periodo === 'mes') {
-            condicionFecha += ` AND ${fechaVenta} >= DATE_TRUNC('month', CURRENT_DATE)`;
+            condicionFecha += ` AND ${fechaVenta} >= DATE_TRUNC('month', ${hoyMexico})`;
         }
 
         if (periodo === 'anio') {
-            condicionFecha += ` AND ${fechaVenta} >= DATE_TRUNC('year', CURRENT_DATE)`;
+            condicionFecha += ` AND ${fechaVenta} >= DATE_TRUNC('year', ${hoyMexico})`;
         }
 
         const sql = `
             SELECT
-                COALESCE(SUM(total), 0) AS total_ventas,
-                COUNT(*) AS total_operaciones
-            FROM ventas
-            WHERE ${condicionFecha}
+                COALESCE(SUM(v.total), 0) AS total_ventas,
+                COUNT(DISTINCT v.id_venta) AS ventas_encontradas,
+                COALESCE(SUM(d.cantidad), 0) AS productos_vendidos
+            FROM ventas v
+            INNER JOIN detalle_venta d
+                ON v.id_venta = d.id_venta
+            WHERE ${condicionFecha.replaceAll('ventas.fecha', 'v.fecha')}
         `;
 
         const resultado = await conexion.query(sql);
@@ -180,7 +185,6 @@ const resumenPorPeriodo = async (req, res) => {
         res.status(500).json(error);
     }
 };
-
 module.exports = {
     obtenerResumen,
     ventasPorMes,

@@ -3,6 +3,17 @@ import API from '../api/axios';
 import Swal from 'sweetalert2';
 import { useEffect, useState } from 'react';
 
+import {
+    FaBug,
+    FaSave,
+    FaTrash,
+    FaSyncAlt,
+    FaExclamationTriangle,
+    FaShieldAlt,
+    FaCalendarAlt,
+    FaMapMarkerAlt
+} from 'react-icons/fa';
+
 function Plagas() {
 
     const [plagas, setPlagas] = useState([]);
@@ -62,14 +73,20 @@ function Plagas() {
 
     const colorSeveridad = (valor) => {
         if (valor === 'Alta') {
-            return 'bg-red-100 text-red-600 px-3 py-1 rounded-full font-semibold';
+            return 'bg-red-100 text-red-600 px-3 py-1 rounded-full font-black';
         }
 
         if (valor === 'Media') {
-            return 'bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full font-semibold';
+            return 'bg-yellow-100 text-yellow-600 px-3 py-1 rounded-full font-black';
         }
 
-        return 'bg-green-100 text-green-600 px-3 py-1 rounded-full font-semibold';
+        return 'bg-green-100 text-green-600 px-3 py-1 rounded-full font-black';
+    };
+
+    const iconoSeveridad = (valor) => {
+        if (valor === 'Alta') return <FaExclamationTriangle />;
+        if (valor === 'Media') return <FaShieldAlt />;
+        return <FaShieldAlt />;
     };
 
     const guardarIncidencia = async () => {
@@ -147,39 +164,96 @@ function Plagas() {
         obtenerPlagas();
     };
 
+    const totalAltas = plagas.filter((plaga) => plaga.severidad === 'Alta').length;
+    const totalMedias = plagas.filter((plaga) => plaga.severidad === 'Media').length;
+    const totalBajas = plagas.filter((plaga) => plaga.severidad === 'Baja').length;
+
     return (
         <MainLayout>
 
-            <div className="mb-8">
-                <h1 className="text-4xl md:text-5xl font-bold text-green-800 dark:text-white">
-                    Control de Plagas 🐛
-                </h1>
+            <div className="mb-10">
+                <div className="relative overflow-hidden rounded-[2.2rem] p-8 md:p-10 bg-gradient-to-r from-red-900 via-orange-800 to-yellow-700 shadow-2xl">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_28%)]" />
 
-                <p className="text-gray-500 dark:text-gray-300 mt-2">
-                    Registro y seguimiento de incidencias en el invernadero
-                </p>
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                        <div>
+                            <span className="inline-flex items-center gap-2 bg-white/15 border border-white/20 text-white px-4 py-2 rounded-full text-sm font-bold mb-5">
+                                🐛 Sanidad del invernadero
+                            </span>
 
-                <button
-                    onClick={actualizarManual}
-                    className="mt-4 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-semibold"
-                >
-                    🔄 Actualizar datos
-                </button>
+                            <h1 className="text-4xl md:text-6xl font-black text-white">
+                                Control de Plagas
+                            </h1>
+
+                            <p className="text-orange-50/90 mt-3 max-w-2xl text-lg">
+                                Registra, consulta y da seguimiento a incidencias fitosanitarias del invernadero.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={actualizarManual}
+                            className="bg-white text-red-800 hover:bg-red-50 px-6 py-4 rounded-2xl font-black shadow-xl transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
+                        >
+                            <FaSyncAlt />
+                            Actualizar datos
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+
+                <div className="rounded-[2rem] p-7 bg-gradient-to-br from-red-700 to-rose-500 text-white shadow-xl">
+                    <FaBug className="text-3xl mb-4 text-white/90" />
+                    <p className="text-white/80 font-semibold">Incidencias</p>
+                    <p className="text-4xl font-black mt-2">{plagas.length}</p>
+                </div>
+
+                <div className="rounded-[2rem] p-7 bg-gradient-to-br from-red-600 to-orange-500 text-white shadow-xl">
+                    <FaExclamationTriangle className="text-3xl mb-4 text-white/90" />
+                    <p className="text-white/80 font-semibold">Severidad alta</p>
+                    <p className="text-4xl font-black mt-2">{totalAltas}</p>
+                </div>
+
+                <div className="rounded-[2rem] p-7 bg-gradient-to-br from-yellow-600 to-amber-400 text-white shadow-xl">
+                    <FaShieldAlt className="text-3xl mb-4 text-white/90" />
+                    <p className="text-white/80 font-semibold">Severidad media</p>
+                    <p className="text-4xl font-black mt-2">{totalMedias}</p>
+                </div>
+
+                <div className="rounded-[2rem] p-7 bg-gradient-to-br from-green-700 to-emerald-500 text-white shadow-xl">
+                    <FaShieldAlt className="text-3xl mb-4 text-white/90" />
+                    <p className="text-white/80 font-semibold">Severidad baja</p>
+                    <p className="text-4xl font-black mt-2">{totalBajas}</p>
+                </div>
+
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
 
-                <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl">
-                    <h2 className="text-2xl font-bold mb-6 dark:text-white">
-                        Nueva incidencia
-                    </h2>
+                <div className="card-pro card-hover p-8">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-14 h-14 rounded-2xl bg-red-100 text-red-700 flex items-center justify-center text-2xl">
+                            <FaBug />
+                        </div>
 
-                    <div className="space-y-4">
+                        <div>
+                            <h2 className="text-2xl font-black dark:text-white">
+                                Nueva incidencia
+                            </h2>
+
+                            <p className="text-sm text-gray-500 dark:text-gray-300">
+                                Registro fitosanitario
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-5">
 
                         <select
                             value={seccion}
                             onChange={(e) => setSeccion(e.target.value)}
-                            className="w-full border p-3 rounded-xl"
+                            className="input-pro"
                         >
                             <option value="">Seleccionar sección</option>
                             <option value="Sección A">Sección A</option>
@@ -193,13 +267,13 @@ function Plagas() {
                             placeholder="Tipo de plaga"
                             value={tipoPlaga}
                             onChange={(e) => setTipoPlaga(e.target.value)}
-                            className="w-full border p-3 rounded-xl"
+                            className="input-pro"
                         />
 
                         <select
                             value={severidad}
                             onChange={(e) => setSeveridad(e.target.value)}
-                            className="w-full border p-3 rounded-xl"
+                            className="input-pro"
                         >
                             <option value="">Severidad</option>
                             <option value="Baja">Baja</option>
@@ -211,34 +285,50 @@ function Plagas() {
                             type="date"
                             value={fecha}
                             onChange={(e) => setFecha(e.target.value)}
-                            className="w-full border p-3 rounded-xl"
+                            className="input-pro"
                         />
 
                         <textarea
                             placeholder="Descripción"
                             value={descripcion}
                             onChange={(e) => setDescripcion(e.target.value)}
-                            className="w-full border p-3 rounded-xl min-h-[120px]"
+                            className="input-pro min-h-[140px]"
                         />
 
-                        <p className="text-sm text-gray-500 dark:text-gray-300">
-                            {descripcion.length}/500 caracteres
-                        </p>
+                        <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-300">
+                            <span>Máximo 500 caracteres</span>
+                            <span className={descripcion.length > 450 ? 'text-red-500 font-bold' : 'font-semibold'}>
+                                {descripcion.length}/500
+                            </span>
+                        </div>
 
                         <button
                             onClick={guardarIncidencia}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-2xl font-semibold"
+                            className="btn-primary w-full flex items-center justify-center gap-3"
                         >
+                            <FaSave />
                             Guardar incidencia
                         </button>
 
                     </div>
                 </div>
 
-                <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl shadow-xl overflow-hidden">
-                    <h2 className="text-2xl font-bold mb-6 dark:text-white">
-                        Historial de incidencias
-                    </h2>
+                <div className="xl:col-span-2 card-pro card-hover p-8 overflow-hidden">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                        <div>
+                            <h2 className="text-3xl font-black text-red-800 dark:text-white">
+                                Historial de incidencias
+                            </h2>
+
+                            <p className="text-gray-500 dark:text-gray-300">
+                                Seguimiento de plagas registradas.
+                            </p>
+                        </div>
+
+                        <span className="bg-red-100 text-red-600 px-4 py-2 rounded-full font-black">
+                            {plagas.length} registros
+                        </span>
+                    </div>
 
                     <div className="grid grid-cols-1 gap-4 lg:hidden">
                         {
@@ -250,32 +340,35 @@ function Plagas() {
                                 plagas.map((plaga) => (
                                     <div
                                         key={plaga.id_plaga}
-                                        className="border border-gray-200 dark:border-gray-700 rounded-2xl p-5 shadow-sm"
+                                        className="bg-white/80 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[1.5rem] p-5 shadow-lg"
                                     >
                                         <div className="flex justify-between items-start gap-4">
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-gray-300">
+                                                <p className="text-sm text-gray-500 dark:text-gray-300 flex items-center gap-2">
+                                                    <FaMapMarkerAlt />
                                                     {plaga.seccion}
                                                 </p>
 
-                                                <h3 className="text-xl font-bold dark:text-white">
+                                                <h3 className="text-xl font-black dark:text-white mt-1">
                                                     {plaga.tipo_plaga}
                                                 </h3>
                                             </div>
 
-                                            <span className={colorSeveridad(plaga.severidad)}>
+                                            <span className={`${colorSeveridad(plaga.severidad)} inline-flex items-center gap-2`}>
+                                                {iconoSeveridad(plaga.severidad)}
                                                 {plaga.severidad}
                                             </span>
                                         </div>
 
-                                        <p className="mt-4 dark:text-gray-200">
-                                            <span className="font-semibold">Fecha:</span>{' '}
+                                        <p className="mt-4 dark:text-gray-200 flex items-center gap-2">
+                                            <FaCalendarAlt className="text-red-500" />
+                                            <span className="font-bold">Fecha:</span>{' '}
                                             {formatearFecha(plaga.fecha)}
                                         </p>
 
                                         {
                                             plaga.descripcion && (
-                                                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                                                <p className="mt-3 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-700 p-4 rounded-2xl">
                                                     {plaga.descripcion}
                                                 </p>
                                             )
@@ -283,8 +376,9 @@ function Plagas() {
 
                                         <button
                                             onClick={() => eliminarIncidencia(plaga.id_plaga)}
-                                            className="mt-5 w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
+                                            className="mt-5 w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-2xl font-bold flex items-center justify-center gap-2"
                                         >
+                                            <FaTrash />
                                             Eliminar
                                         </button>
                                     </div>
@@ -293,19 +387,19 @@ function Plagas() {
                         }
                     </div>
 
-                    <div className="hidden lg:block overflow-x-auto">
+                    <div className="hidden lg:block overflow-x-auto rounded-[1.5rem] border border-slate-100 dark:border-slate-700">
                         <table className="w-full min-w-[850px]">
-                            <thead>
-                                <tr className="border-b border-gray-200 dark:border-gray-700">
-                                    <th className="p-3 text-left dark:text-white">Sección</th>
-                                    <th className="p-3 text-left dark:text-white">Plaga</th>
-                                    <th className="p-3 text-left dark:text-white">Severidad</th>
-                                    <th className="p-3 text-left dark:text-white">Fecha</th>
-                                    <th className="p-3 text-left dark:text-white">Acción</th>
+                            <thead className="bg-red-800 text-white">
+                                <tr>
+                                    <th className="p-4 text-left">Sección</th>
+                                    <th className="p-4 text-left">Plaga</th>
+                                    <th className="p-4 text-left">Severidad</th>
+                                    <th className="p-4 text-left">Fecha</th>
+                                    <th className="p-4 text-left">Acción</th>
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody className="bg-white/70 dark:bg-slate-900/70">
                                 {
                                     plagas.length === 0 ? (
                                         <tr>
@@ -320,31 +414,33 @@ function Plagas() {
                                         plagas.map((plaga) => (
                                             <tr
                                                 key={plaga.id_plaga}
-                                                className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                                className="border-b border-slate-100 dark:border-slate-700 hover:bg-red-50 dark:hover:bg-slate-800 transition-all"
                                             >
-                                                <td className="p-3 dark:text-gray-200">
+                                                <td className="p-4 dark:text-gray-200 font-semibold">
                                                     {plaga.seccion}
                                                 </td>
 
-                                                <td className="p-3 dark:text-gray-200">
+                                                <td className="p-4 dark:text-gray-200 font-black">
                                                     {plaga.tipo_plaga}
                                                 </td>
 
-                                                <td className="p-3">
-                                                    <span className={colorSeveridad(plaga.severidad)}>
+                                                <td className="p-4">
+                                                    <span className={`${colorSeveridad(plaga.severidad)} inline-flex items-center gap-2`}>
+                                                        {iconoSeveridad(plaga.severidad)}
                                                         {plaga.severidad}
                                                     </span>
                                                 </td>
 
-                                                <td className="p-3 dark:text-gray-200">
+                                                <td className="p-4 dark:text-gray-200">
                                                     {formatearFecha(plaga.fecha)}
                                                 </td>
 
-                                                <td className="p-3">
+                                                <td className="p-4">
                                                     <button
                                                         onClick={() => eliminarIncidencia(plaga.id_plaga)}
-                                                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
+                                                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2"
                                                     >
+                                                        <FaTrash />
                                                         Eliminar
                                                     </button>
                                                 </td>

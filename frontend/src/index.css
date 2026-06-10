@@ -1,2 +1,70 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+* {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: #020617;
+}
+
+.card-pro {
+    @apply bg-white/92 dark:bg-slate-900/92 backdrop-blur-xl border border-white/70 dark:border-white/10 rounded-[2rem] shadow-[0_25px_70px_rgba(15,23,42,0.14)] dark:shadow-[0_25px_80px_rgba(0,0,0,0.45)];
+}
+
+.card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_35px_90px_rgba(15,23,42,0.22)];
+}
+
+.btn-primary {
+    @apply bg-gradient-to-r from-green-700 to-emerald-500 hover:from-green-800 hover:to-emerald-600 text-white px-6 py-3 rounded-2xl font-black shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5;
+}
+
+.btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-6 py-3 rounded-2xl font-black shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5;
+}
+
+.input-pro {
+    @apply w-full bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all dark:text-white;
+}
+
+.table-pro {
+    @apply w-full overflow-hidden rounded-2xl;
+}
+
+.table-pro thead {
+    @apply bg-green-800 text-white;
+}
+
+.table-pro th {
+    @apply p-4 text-left font-black;
+}
+
+.table-pro td {
+    @apply p-4 border-b border-slate-100 dark:border-slate-700;
+}
+
+.glass-panel {
+    @apply bg-white/85 dark:bg-slate-950/85 backdrop-blur-2xl border border-white/50 dark:border-white/10 rounded-[2rem] shadow-2xl;
+}
+
+.text-title {
+    @apply text-green-900 dark:text-white font-black;
+}
+
+.text-muted {
+    @apply text-gray-500 dark:text-gray-300;
+}

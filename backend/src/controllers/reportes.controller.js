@@ -1,29 +1,38 @@
 const conexion = require('../config/db');
 
+const fechaVenta = `
+    CASE
+        WHEN v.fecha::text LIKE '%+00%' THEN
+            (v.fecha::timestamptz AT TIME ZONE 'America/Mexico_City')
+        ELSE
+            (v.fecha::timestamp)
+    END
+`;
+
 const ventasPorDia = async (req, res) => {
     try {
         const sql = `
             SELECT
-                TO_CHAR(v.fecha, 'DD/MM/YYYY') AS periodo,
+                TO_CHAR(${fechaVenta}, 'DD/MM/YYYY') AS periodo,
+                TO_CHAR(${fechaVenta}, 'HH12:MI AM') AS hora,
                 e.nombre AS especie,
                 d.cantidad,
                 d.precio,
-                d.subtotal AS total,
-                TO_CHAR(v.fecha, 'HH12:MI AM') AS hora
+                d.subtotal AS total
             FROM ventas v
-            INNER JOIN detalle_venta d
-                ON v.id_venta = d.id_venta
-            INNER JOIN especies e
-                ON d.id_especie = e.id_especie
-            ORDER BY v.fecha DESC
+            INNER JOIN detalle_venta d ON v.id_venta = d.id_venta
+            INNER JOIN especies e ON d.id_especie = e.id_especie
+            ORDER BY ${fechaVenta} DESC
         `;
 
         const resultado = await conexion.query(sql);
         res.json(resultado.rows);
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json(error);
+        console.log('ERROR ventasPorDia:', error.message);
+        res.status(500).json({
+            mensaje: error.message
+        });
     }
 };
 
@@ -31,26 +40,30 @@ const ventasPorSemana = async (req, res) => {
     try {
         const sql = `
             SELECT
-                CONCAT('Semana ', EXTRACT(WEEK FROM v.fecha)) AS periodo,
+                CONCAT('Semana ', EXTRACT(WEEK FROM ${fechaVenta})) AS periodo,
                 e.nombre AS especie,
                 SUM(d.cantidad) AS cantidad,
                 d.precio,
                 SUM(d.subtotal) AS total
             FROM ventas v
-            INNER JOIN detalle_venta d
-                ON v.id_venta = d.id_venta
-            INNER JOIN especies e
-                ON d.id_especie = e.id_especie
-            GROUP BY EXTRACT(WEEK FROM v.fecha), e.nombre, d.precio
-            ORDER BY EXTRACT(WEEK FROM v.fecha) DESC
+            INNER JOIN detalle_venta d ON v.id_venta = d.id_venta
+            INNER JOIN especies e ON d.id_especie = e.id_especie
+            GROUP BY
+                EXTRACT(WEEK FROM ${fechaVenta}),
+                e.nombre,
+                d.precio
+            ORDER BY
+                EXTRACT(WEEK FROM ${fechaVenta}) DESC
         `;
 
         const resultado = await conexion.query(sql);
         res.json(resultado.rows);
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json(error);
+        console.log('ERROR ventasPorSemana:', error.message);
+        res.status(500).json({
+            mensaje: error.message
+        });
     }
 };
 
@@ -58,33 +71,33 @@ const ventasPorMes = async (req, res) => {
     try {
         const sql = `
             SELECT
-                TO_CHAR(v.fecha, 'TMMonth YYYY') AS periodo,
+                TO_CHAR(${fechaVenta}, 'TMMonth YYYY') AS periodo,
                 e.nombre AS especie,
                 SUM(d.cantidad) AS cantidad,
                 d.precio,
                 SUM(d.subtotal) AS total
             FROM ventas v
-            INNER JOIN detalle_venta d
-                ON v.id_venta = d.id_venta
-            INNER JOIN especies e
-                ON d.id_especie = e.id_especie
-            GROUP BY 
-                EXTRACT(YEAR FROM v.fecha),
-                EXTRACT(MONTH FROM v.fecha),
-                TO_CHAR(v.fecha, 'TMMonth YYYY'),
+            INNER JOIN detalle_venta d ON v.id_venta = d.id_venta
+            INNER JOIN especies e ON d.id_especie = e.id_especie
+            GROUP BY
+                EXTRACT(YEAR FROM ${fechaVenta}),
+                EXTRACT(MONTH FROM ${fechaVenta}),
+                TO_CHAR(${fechaVenta}, 'TMMonth YYYY'),
                 e.nombre,
                 d.precio
-            ORDER BY 
-                EXTRACT(YEAR FROM v.fecha) DESC,
-                EXTRACT(MONTH FROM v.fecha) DESC
+            ORDER BY
+                EXTRACT(YEAR FROM ${fechaVenta}) DESC,
+                EXTRACT(MONTH FROM ${fechaVenta}) DESC
         `;
 
         const resultado = await conexion.query(sql);
         res.json(resultado.rows);
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json(error);
+        console.log('ERROR ventasPorMes:', error.message);
+        res.status(500).json({
+            mensaje: error.message
+        });
     }
 };
 
@@ -97,10 +110,9 @@ const topEspeciesVendidas = async (req, res) => {
                 SUM(d.subtotal) AS total,
                 'Alta demanda' AS estado
             FROM detalle_venta d
-            INNER JOIN especies e
-                ON d.id_especie = e.id_especie
+            INNER JOIN especies e ON d.id_especie = e.id_especie
             GROUP BY e.nombre
-            ORDER BY cantidad DESC
+            ORDER BY SUM(d.cantidad) DESC
             LIMIT 10
         `;
 
@@ -108,8 +120,9 @@ const topEspeciesVendidas = async (req, res) => {
         res.json(resultado.rows);
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json(error);
+        res.status(500).json({
+            mensaje: error.message
+        });
     }
 };
 
@@ -135,8 +148,9 @@ const stockCritico = async (req, res) => {
         res.json(resultado.rows);
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json(error);
+        res.status(500).json({
+            mensaje: error.message
+        });
     }
 };
 
@@ -160,8 +174,9 @@ const plagasPorSeveridad = async (req, res) => {
         res.json(resultado.rows);
 
     } catch (error) {
-        console.log(error);
-        res.status(500).json(error);
+        res.status(500).json({
+            mensaje: error.message
+        });
     }
 };
 
