@@ -2,10 +2,15 @@ const conexion = require('../config/db');
 
 const fechaUltimoCierre = `
     (
-        SELECT COALESCE(MAX(fecha_cierre), '1900-01-01')
+        SELECT COALESCE(MAX(fecha_cierre), '1900-01-01'::timestamp)
         FROM cierres_mensuales
     )
 `;
+
+const fechaVenta = `(ventas.fecha::timestamp)`;
+const fechaVentaAlias = `(v.fecha::timestamp)`;
+const fechaPlaga = `(plagas.fecha::timestamp)`;
+const fechaPlagaAlias = `(p.fecha::timestamp)`;
 
 const obtenerResumen = async (req, res) => {
     try {
@@ -14,7 +19,7 @@ const obtenerResumen = async (req, res) => {
                 (
                     SELECT COALESCE(SUM(total), 0)
                     FROM ventas
-                    WHERE fecha > ${fechaUltimoCierre}
+                    WHERE ${fechaVenta} > ${fechaUltimoCierre}
                 ) AS total_ventas,
 
                 (
@@ -26,7 +31,7 @@ const obtenerResumen = async (req, res) => {
                 (
                     SELECT COUNT(*)
                     FROM plagas
-                    WHERE fecha::timestamp > ${fechaUltimoCierre}
+                    WHERE ${fechaPlaga} > ${fechaUltimoCierre}
                     AND severidad = 'Alta'
                 ) AS plagas_altas,
 
@@ -49,15 +54,15 @@ const ventasPorMes = async (req, res) => {
     try {
         const sql = `
             SELECT
-                TO_CHAR(fecha, 'Month') AS mes,
+                TO_CHAR(${fechaVenta}, 'TMMonth') AS mes,
                 SUM(total) AS ventas
             FROM ventas
-            WHERE fecha > ${fechaUltimoCierre}
+            WHERE ${fechaVenta} > ${fechaUltimoCierre}
             GROUP BY
-                EXTRACT(MONTH FROM fecha),
-                TO_CHAR(fecha, 'Month')
+                EXTRACT(MONTH FROM ${fechaVenta}),
+                TO_CHAR(${fechaVenta}, 'TMMonth')
             ORDER BY
-                EXTRACT(MONTH FROM fecha)
+                EXTRACT(MONTH FROM ${fechaVenta})
         `;
 
         const resultado = await conexion.query(sql);
@@ -74,15 +79,15 @@ const ultimasVentas = async (req, res) => {
         const sql = `
             SELECT
                 v.id_venta,
-                v.fecha,
+                v.fecha::text AS fecha,
                 v.total,
                 e.nombre AS especie,
                 d.cantidad
             FROM ventas v
             INNER JOIN detalle_venta d ON v.id_venta = d.id_venta
             INNER JOIN especies e ON d.id_especie = e.id_especie
-            WHERE v.fecha > ${fechaUltimoCierre}
-            ORDER BY v.fecha DESC
+            WHERE ${fechaVentaAlias} > ${fechaUltimoCierre}
+            ORDER BY v.id_venta DESC
             LIMIT 5
         `;
 
@@ -117,10 +122,14 @@ const especiesCriticas = async (req, res) => {
 const plagasRecientes = async (req, res) => {
     try {
         const sql = `
-            SELECT seccion, tipo_plaga, severidad, fecha
-            FROM plagas
-            WHERE fecha::timestamp > ${fechaUltimoCierre}
-            ORDER BY fecha DESC
+            SELECT
+                p.seccion,
+                p.tipo_plaga,
+                p.severidad,
+                p.fecha
+            FROM plagas p
+            WHERE ${fechaPlagaAlias} > ${fechaUltimoCierre}
+            ORDER BY ${fechaPlagaAlias} DESC
             LIMIT 5
         `;
 
@@ -137,22 +146,22 @@ const resumenPorPeriodo = async (req, res) => {
     try {
         const { periodo } = req.params;
 
-        let condicionFecha = `fecha > ${fechaUltimoCierre}`;
+        let condicionFecha = `${fechaVenta} > ${fechaUltimoCierre}`;
 
         if (periodo === 'hoy') {
-            condicionFecha += ` AND DATE(fecha) = CURRENT_DATE`;
+            condicionFecha += ` AND DATE(${fechaVenta}) = CURRENT_DATE`;
         }
 
         if (periodo === 'semana') {
-            condicionFecha += ` AND fecha >= DATE_TRUNC('week', CURRENT_DATE)`;
+            condicionFecha += ` AND ${fechaVenta} >= DATE_TRUNC('week', CURRENT_DATE)`;
         }
 
         if (periodo === 'mes') {
-            condicionFecha += ` AND fecha >= DATE_TRUNC('month', CURRENT_DATE)`;
+            condicionFecha += ` AND ${fechaVenta} >= DATE_TRUNC('month', CURRENT_DATE)`;
         }
 
         if (periodo === 'anio') {
-            condicionFecha += ` AND fecha >= DATE_TRUNC('year', CURRENT_DATE)`;
+            condicionFecha += ` AND ${fechaVenta} >= DATE_TRUNC('year', CURRENT_DATE)`;
         }
 
         const sql = `
