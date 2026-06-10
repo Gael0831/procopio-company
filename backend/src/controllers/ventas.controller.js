@@ -40,61 +40,58 @@ const registrarVenta = async (req, res) => {
             });
         }
 
-        const subtotal = cantidad * precio;
+        const subtotal = Number(cantidad) * Number(precio);
 
-        const verificarStock = `
+        const stockResultado = await conexion.query(
+            `
             SELECT stock
             FROM especies
             WHERE id_especie = $1
-        `;
-
-        const stockResultado = await conexion.query(
-            verificarStock,
+            `,
             [id_especie]
         );
 
-        if(stockResultado.rows.length === 0){
-
-            return res.json({
+        if (stockResultado.rows.length === 0) {
+            return res.status(404).json({
                 success: false,
                 mensaje: 'La especie no existe'
             });
-
         }
 
-        const stockActual =
-            stockResultado.rows[0].stock;
+        const stockActual = Number(stockResultado.rows[0].stock);
 
-        if(stockActual < cantidad){
-
-            return res.json({
+        if (stockActual < Number(cantidad)) {
+            return res.status(400).json({
                 success: false,
                 mensaje: 'Stock insuficiente'
             });
-
         }
 
-        const crearVenta = `
+        const ventaResultado = await conexion.query(
+            `
             INSERT INTO ventas(
                 total,
-                id_usuario
+                id_usuario,
+                fecha
             )
-            VALUES($1,$2)
-            RETURNING id_venta
-        `;
-
-        const ventaResultado = await conexion.query(
-            crearVenta,
+            VALUES(
+                $1,
+                $2,
+                CURRENT_TIMESTAMP   
+            )
+            RETURNING id_venta, fecha
+            `,
             [
                 subtotal,
                 id_usuario
             ]
         );
 
-        const idVenta =
-            ventaResultado.rows[0].id_venta;
+        const idVenta = ventaResultado.rows[0].id_venta;
+        const fechaVenta = ventaResultado.rows[0].fecha;
 
-        const crearDetalle = `
+        await conexion.query(
+            `
             INSERT INTO detalle_venta(
                 id_venta,
                 id_especie,
@@ -103,10 +100,7 @@ const registrarVenta = async (req, res) => {
                 subtotal
             )
             VALUES($1,$2,$3,$4,$5)
-        `;
-
-        await conexion.query(
-            crearDetalle,
+            `,
             [
                 idVenta,
                 id_especie,
@@ -116,14 +110,12 @@ const registrarVenta = async (req, res) => {
             ]
         );
 
-        const actualizarStock = `
+        await conexion.query(
+            `
             UPDATE especies
             SET stock = stock - $1
             WHERE id_especie = $2
-        `;
-
-        await conexion.query(
-            actualizarStock,
+            `,
             [
                 cantidad,
                 id_especie
@@ -132,16 +124,20 @@ const registrarVenta = async (req, res) => {
 
         res.json({
             success: true,
-            mensaje: 'Venta registrada',
+            mensaje: 'Venta registrada correctamente',
             id_venta: idVenta,
-            total: subtotal
+            total: subtotal,
+            fecha: fechaVenta
         });
 
     } catch (error) {
 
         console.log(error);
 
-        res.status(500).json(error);
+        res.status(500).json({
+            success: false,
+            mensaje: 'Error al registrar la venta'
+        });
 
     }
 
@@ -154,7 +150,15 @@ const obtenerVentas = async (req, res) => {
         const sql = `
             SELECT
                 v.id_venta,
-                (v.fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Mexico_City') AS fecha,
+                v.fecha,
+                TO_CHAR(
+                    v.fecha AT TIME ZONE 'America/Mexico_City',
+                    'YYYY-MM-DD"T"HH24:MI:SS'
+                ) AS fecha_local,
+                TO_CHAR(
+                    v.fecha AT TIME ZONE 'America/Mexico_City',
+                    'DD/MM/YYYY HH12:MI AM'
+                ) AS fecha_formateada,
                 v.total,
                 e.nombre AS especie,
                 d.cantidad,
@@ -168,10 +172,9 @@ const obtenerVentas = async (req, res) => {
             WHERE v.fecha > (
                 SELECT COALESCE(MAX(fecha_cierre), '1900-01-01')
                 FROM cierres_mensuales
-            )    
+            )
             ORDER BY v.fecha DESC
         `;
-        
 
         const resultado = await conexion.query(sql);
 
@@ -181,7 +184,10 @@ const obtenerVentas = async (req, res) => {
 
         console.log(error);
 
-        res.status(500).json(error);
+        res.status(500).json({
+            success: false,
+            mensaje: 'Error al obtener ventas'
+        });
 
     }
 

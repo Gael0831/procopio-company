@@ -18,11 +18,11 @@ function Plagas() {
         setPlagas(respuesta.data);
     };
 
-    useEffect(() => {
-        const cargarPlagas = async () => {
-            await obtenerPlagas();
-        };
+    const cargarPlagas = async () => {
+        await obtenerPlagas();
+    };
 
+    useEffect(() => {
         cargarPlagas();
 
         const intervalo = setInterval(() => {
@@ -32,12 +32,32 @@ function Plagas() {
         return () => clearInterval(intervalo);
     }, []);
 
+    const actualizarManual = async () => {
+        await cargarPlagas();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Actualizado',
+            text: 'La información se actualizó correctamente',
+            timer: 1200,
+            showConfirmButton: false
+        });
+    };
+
     const limpiarFormulario = () => {
         setSeccion('');
         setTipoPlaga('');
         setSeveridad('');
         setFecha('');
         setDescripcion('');
+    };
+
+    const formatearFecha = (fechaPlaga) => {
+        if (!fechaPlaga) return 'Sin fecha';
+
+        const fechaLimpia = fechaPlaga.split('T')[0];
+
+        return new Date(fechaLimpia + 'T00:00:00').toLocaleDateString('es-MX');
     };
 
     const colorSeveridad = (valor) => {
@@ -63,7 +83,9 @@ function Plagas() {
         }
 
         const fechaActual = new Date();
-        const fechaRegistro = new Date(fecha);
+        fechaActual.setHours(0, 0, 0, 0);
+
+        const fechaRegistro = new Date(fecha + 'T00:00:00');
 
         if (fechaRegistro > fechaActual) {
             Swal.fire({
@@ -136,6 +158,13 @@ function Plagas() {
                 <p className="text-gray-500 dark:text-gray-300 mt-2">
                     Registro y seguimiento de incidencias en el invernadero
                 </p>
+
+                <button
+                    onClick={actualizarManual}
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-semibold"
+                >
+                    🔄 Actualizar datos
+                </button>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -241,7 +270,7 @@ function Plagas() {
 
                                         <p className="mt-4 dark:text-gray-200">
                                             <span className="font-semibold">Fecha:</span>{' '}
-                                            {new Date(plaga.fecha).toLocaleDateString()}
+                                            {formatearFecha(plaga.fecha)}
                                         </p>
 
                                         {
@@ -308,7 +337,7 @@ function Plagas() {
                                                 </td>
 
                                                 <td className="p-3 dark:text-gray-200">
-                                                    {new Date(plaga.fecha).toLocaleDateString()}
+                                                    {formatearFecha(plaga.fecha)}
                                                 </td>
 
                                                 <td className="p-3">

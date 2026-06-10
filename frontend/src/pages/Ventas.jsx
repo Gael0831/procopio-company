@@ -32,12 +32,12 @@ function Ventas() {
         setVentas(respuesta.data);
     };
 
-    useEffect(() => {
-        const cargarDatos = async () => {
-            await obtenerEspecies();
-            await obtenerVentas();
-        };
+    const cargarDatos = async () => {
+        await obtenerEspecies();
+        await obtenerVentas();
+    };
 
+    useEffect(() => {
         cargarDatos();
 
         const intervalo = setInterval(() => {
@@ -47,10 +47,26 @@ function Ventas() {
         return () => clearInterval(intervalo);
     }, []);
 
+    const actualizarManual = async () => {
+        await cargarDatos();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Actualizado',
+            text: 'La información se actualizó correctamente',
+            timer: 1200,
+            showConfirmButton: false
+        });
+    };
+
+    const parseFechaVenta = (venta) => {
+        return new Date(venta.fecha_local || venta.fecha);
+    };
+
     const ventasFiltradas = ventas.filter((venta) => {
         if (filtro === 'todas') return true;
 
-        const fechaVenta = new Date(venta.fecha);
+        const fechaVenta = parseFechaVenta(venta);
         const hoy = new Date();
 
         if (filtro === 'dia') {
@@ -149,7 +165,9 @@ function Ventas() {
                 cantidad,
                 precio,
                 subtotal,
-                fecha: new Date().toLocaleString()
+                fecha: respuesta.data.fecha
+                    ? new Date(respuesta.data.fecha).toLocaleString('es-MX')
+                    : new Date().toLocaleString('es-MX')
             });
 
             setMostrarTicket(true);
@@ -157,8 +175,7 @@ function Ventas() {
             setIdEspecie('');
             setCantidad('');
 
-            obtenerEspecies();
-            obtenerVentas();
+            cargarDatos();
 
         } else {
             Swal.fire({
@@ -193,6 +210,13 @@ function Ventas() {
                 <p className="text-gray-500 dark:text-gray-300 mt-2">
                     Registro de ventas y control automático de inventario
                 </p>
+
+                <button
+                    onClick={actualizarManual}
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-semibold"
+                >
+                    🔄 Actualizar datos
+                </button>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -343,7 +367,7 @@ function Ventas() {
 
                                         <p className="dark:text-gray-200">
                                             <span className="font-semibold">Fecha:</span>{' '}
-                                            {new Date(venta.fecha).toLocaleString()}
+                                            {venta.fecha_formateada}
                                         </p>
                                     </div>
                                 ))
@@ -395,7 +419,7 @@ function Ventas() {
                                                 </td>
 
                                                 <td className="p-3 dark:text-gray-200">
-                                                    {new Date(venta.fecha).toLocaleString()}
+                                                    {venta.fecha_formateada}
                                                 </td>
                                             </tr>
                                         ))
