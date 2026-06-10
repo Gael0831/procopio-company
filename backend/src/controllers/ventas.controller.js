@@ -77,7 +77,10 @@ const registrarVenta = async (req, res) => {
             VALUES(
                 $1,
                 $2,
-                CURRENT_TIMESTAMP   
+                TO_CHAR(
+                    NOW() AT TIME ZONE 'America/Mexico_City',
+                    'YYYY-MM-DD HH24:MI:SS'
+                )
             )
             RETURNING id_venta, fecha
             `,
@@ -150,15 +153,7 @@ const obtenerVentas = async (req, res) => {
         const sql = `
             SELECT
                 v.id_venta,
-                v.fecha,
-                TO_CHAR(
-                    v.fecha AT TIME ZONE 'America/Mexico_City',
-                    'YYYY-MM-DD"T"HH24:MI:SS'
-                ) AS fecha_local,
-                TO_CHAR(
-                    v.fecha AT TIME ZONE 'America/Mexico_City',
-                    'DD/MM/YYYY HH12:MI AM'
-                ) AS fecha_formateada,
+                v.fecha::text AS fecha,
                 v.total,
                 e.nombre AS especie,
                 d.cantidad,
@@ -169,11 +164,7 @@ const obtenerVentas = async (req, res) => {
                 ON v.id_venta = d.id_venta
             INNER JOIN especies e
                 ON d.id_especie = e.id_especie
-            WHERE v.fecha > (
-                SELECT COALESCE(MAX(fecha_cierre), '1900-01-01')
-                FROM cierres_mensuales
-            )
-            ORDER BY v.fecha DESC
+            ORDER BY v.id_venta DESC
         `;
 
         const resultado = await conexion.query(sql);
@@ -182,11 +173,13 @@ const obtenerVentas = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+        console.log('ERROR OBTENER VENTAS:', error.message);
 
         res.status(500).json({
             success: false,
-            mensaje: 'Error al obtener ventas'
+            mensaje: error.message,
+            codigo: error.code,
+            detalle: error.detail
         });
 
     }

@@ -28,8 +28,13 @@ function Ventas() {
     };
 
     const obtenerVentas = async () => {
-        const respuesta = await API.get('/ventas');
-        setVentas(respuesta.data);
+        try {
+            const respuesta = await API.get('/ventas');
+            setVentas(respuesta.data);
+        } catch (error) {
+            console.log(error);
+            setVentas([]);
+        }
     };
 
     const cargarDatos = async () => {
@@ -59,14 +64,27 @@ function Ventas() {
         });
     };
 
-    const parseFechaVenta = (venta) => {
-        return new Date(venta.fecha_local || venta.fecha);
+    const parseFechaLocal = (fecha) => {
+        if (!fecha) return new Date();
+
+        return new Date(fecha.replace(' ', 'T'));
     };
+
+    const formatearFechaVenta = (fecha) => {
+    if (!fecha) return 'Sin fecha';
+
+    const fechaNormalizada = String(fecha).replace(' ', 'T');
+
+    return new Date(fechaNormalizada).toLocaleString('es-MX', {
+        dateStyle: 'short',
+        timeStyle: 'short'
+    });
+};
 
     const ventasFiltradas = ventas.filter((venta) => {
         if (filtro === 'todas') return true;
 
-        const fechaVenta = parseFechaVenta(venta);
+        const fechaVenta = new Date(String(venta.fecha).replace(' ', 'T'));
         const hoy = new Date();
 
         if (filtro === 'dia') {
@@ -367,7 +385,7 @@ function Ventas() {
 
                                         <p className="dark:text-gray-200">
                                             <span className="font-semibold">Fecha:</span>{' '}
-                                            {venta.fecha_formateada}
+                                            {formatearFechaVenta(venta.fecha)}
                                         </p>
                                     </div>
                                 ))
@@ -419,7 +437,7 @@ function Ventas() {
                                                 </td>
 
                                                 <td className="p-3 dark:text-gray-200">
-                                                    {venta.fecha_formateada}
+                                                    {formatearFechaVenta(venta.fecha)}
                                                 </td>
                                             </tr>
                                         ))
